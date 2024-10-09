@@ -18,7 +18,9 @@ class Session(Base):
     uuid: Mapped[UUID] = mapped_column(
         PgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
-    user_uuid: Mapped[UUID] = mapped_column(ForeignKey("users.uuid", ondelete="CASCADE"), nullable=False)
+    user_uuid: Mapped[UUID] = mapped_column(
+        ForeignKey("users.uuid", ondelete="CASCADE"), nullable=False
+    )
     session_id: Mapped[str] = mapped_column(
         String(64), unique=True, nullable=False
     )

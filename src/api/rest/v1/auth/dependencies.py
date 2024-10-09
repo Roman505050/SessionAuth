@@ -3,6 +3,7 @@ from fastapi import Depends, Request
 from user_agents import parse  # type: ignore
 
 from application.session.services.session_service import SessionService
+from application.user.interfaces.services.email import IEmailService
 from application.user.services.user_service import UserService
 from domain.session.value_objects.user_agent import UserAgent
 from infrastructure.database.connext import get_session_dependency
@@ -34,11 +35,18 @@ def get_user_agent(request: Request) -> UserAgent:
     )
 
 
-def get_user_service(session: AsyncSession = Depends(get_session_dependency)):
+def get_email_service():
+    return RabbitMQEmailService(settings.rabbitmq_url)
+
+
+def get_user_service(
+    session: AsyncSession = Depends(get_session_dependency),
+    email_service: IEmailService = Depends(get_email_service),
+):
     return UserService(
         UserRepository(session),
         CryptographyService(),
-        RabbitMQEmailService(settings.rabbitmq_url),
+        email_service,
     )
 
 
