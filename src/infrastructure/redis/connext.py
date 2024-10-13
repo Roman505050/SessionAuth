@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import AsyncGenerator
 from redis.asyncio import Redis
 
 from config import redis_settings as settings
@@ -12,6 +12,6 @@ async_redis_client = Redis(
 )
 
 
-async def get_redis_dependency() -> Generator[Redis, None, None]:
+async def get_redis_dependency() -> AsyncGenerator[Redis, None]:
     yield async_redis_client
     await async_redis_client.close()

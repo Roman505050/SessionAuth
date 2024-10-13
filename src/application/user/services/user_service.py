@@ -127,4 +127,4 @@ class UserService:
             await self._user_repo.update(user)
             await self._user_repo.commit()
 
-            return UserDTO.from_entity(user)
+        return UserDTO.from_entity(user)

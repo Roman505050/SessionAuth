@@ -17,7 +17,9 @@ from infrastructure.services.cryptography import CryptographyService
 
 
 def get_ip_remote(request: Request) -> str:
-    return request.headers.get("X-Real-IP", request.client.host)
+    return request.headers.get(
+        "X-Real-IP", request.client.host if request.client else "Unknown"
+    )
 
 
 def get_user_agent(request: Request) -> UserAgent:

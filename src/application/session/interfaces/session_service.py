@@ -21,7 +21,7 @@ class ISessionService(ABC):
         pass
 
     @abstractmethod
-    async def validate_session(self, session_id: str) -> SessionDTO:
+    async def validate_session(self, session_id: str) -> SessionEntity:
         pass
 
     @abstractmethod

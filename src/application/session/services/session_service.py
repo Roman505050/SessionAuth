@@ -60,7 +60,7 @@ class SessionService(ISessionService):
 
         if len(sessions) >= session_settings.MAX_SESSIONS:
             await self.session_repository.delete_all_by_user_uuid(user.uuid)
-            sessions: list[SessionEntity] = []
+            sessions: list[SessionEntity] = []  # type: ignore[no-redef]
 
         session_id = secrets.token_hex(32)
 
@@ -98,17 +98,11 @@ class SessionService(ISessionService):
             user_uuid
         )
         dto_sessions = [
-            SessionDTO.from_entity(session) for session in sessions
+            SessionDTO.from_entity(
+                session,
+                is_current=False if session.session_id != session_id else True,
+            )
+            for session in sessions
         ]
-
-        if session_id:
-            for session in dto_sessions:
-                if session.session_id == session_id:
-                    session.is_current = True
-                    break
-            else:
-                logger.warning(
-                    f"Session with id {session_id} not found in user sessions"
-                )
 
         return dto_sessions
