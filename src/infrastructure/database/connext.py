@@ -1,4 +1,9 @@
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import (
+    async_sessionmaker,
+    create_async_engine,
+    AsyncSession,
+)
 
 from config import postgres_settings as settings
 
@@ -13,7 +18,7 @@ async_engine = create_async_engine(
 async_session_maker = async_sessionmaker(async_engine)
 
 
-async def get_session_dependency():
+async def get_session_dependency() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
         await session.close()

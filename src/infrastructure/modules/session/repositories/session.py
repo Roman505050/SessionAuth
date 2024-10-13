@@ -3,12 +3,14 @@ from uuid import UUID
 from sqlalchemy import select, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from application.session.interfaces.repositories.session import (
+from application.session.exceptions.session_not_found import (
+    SessionNotFoundException,
+)
+from application.session.ports.repositories.session import (
     ISessionRepository,
 )
 from domain.session.entities.session import SessionEntity
 from infrastructure.modules.session.models.session import Session
-from shared.exceptions.not_found import NotFoundException
 
 
 class SessionRepository(ISessionRepository):
@@ -51,12 +53,17 @@ class SessionRepository(ISessionRepository):
         result = await self.session.execute(stmt)
         session = result.scalars().first()
         if not session:
-            raise NotFoundException(
-                "Session not found."
-            )  # TODO: Create a custom exception
+            raise SessionNotFoundException(
+                f"Session with session_id {session_id} not found."
+            )
         return session.to_entity()
 
     async def delete(self, session: SessionEntity) -> None:
         stmt = delete(self.model).filter_by(uuid=session.uuid)
+        await self.session.execute(stmt)
+        await self.commit()
+
+    async def delete_all_by_user_uuid(self, user_uuid: UUID) -> None:
+        stmt = delete(self.model).filter_by(user_uuid=user_uuid)
         await self.session.execute(stmt)
         await self.commit()

@@ -1,9 +1,9 @@
-from sqlalchemy import insert, select, delete
+from sqlalchemy import insert, select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
 from application.user.exceptions.user_not_found import UserNotFoundException
-from application.user.interfaces.repositories.user import IUserRepository
+from application.user.ports.repositories.user import IUserRepository
 from domain.user.entities.user import UserEntity
 from infrastructure.modules.user.models.user import User
 
@@ -66,7 +66,7 @@ class UserRepository(IUserRepository):
 
     async def update(self, user: UserEntity) -> UserEntity:
         stmt = (
-            insert(self.model)
+            update(self.model)
             .values(
                 uuid=user.uuid,
                 username=user.username,

@@ -26,3 +26,7 @@ class ISessionRepository(ABC):
     @abstractmethod
     async def delete(self, session: SessionEntity) -> None:
         pass
+
+    @abstractmethod
+    async def delete_all_by_user_uuid(self, user_uuid: UUID) -> None:
+        pass

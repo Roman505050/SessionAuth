@@ -1,6 +1,6 @@
 import bcrypt
 
-from application.user.interfaces.services.cryptography import (
+from application.user.ports.services.cryptography import (
     ICryptographyService,
 )
 

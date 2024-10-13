@@ -6,7 +6,9 @@ class SessionSettings(BaseSettings):
         env_file=".env", extra="ignore", env_prefix="SESSION_"
     )
 
-    expire_seconds: int = 60 * 60 * 24 * 7  # 1 week
+    EXPIRE_SECONDS: int = 60 * 60 * 24 * 7  # 1 week
+    SECURE: bool = True
+    MAX_SESSIONS: int = 5
 
 
 class PostgresSettings(BaseSettings):
@@ -54,4 +56,22 @@ class RabbitMQSettings(BaseSettings):
             f"amqp://{self.USER}:"
             f"{self.PASS}@{self.HOST}:"
             f"{self.PORT}/{self.VHOST}"
+        )
+
+
+class RedisSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore", env_prefix="REDIS_"
+    )
+    HOST: str
+    PORT: int
+    USERNAME: str
+    PASSWORD: str
+    DB: int
+
+    @property
+    def redis_url(self):
+        return (
+            f"redis://{self.USERNAME}:{self.PASSWORD}@"
+            f"{self.HOST}:{self.PORT}/{self.DB}"
         )

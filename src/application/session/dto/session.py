@@ -17,7 +17,6 @@ class SessionDTO(BaseModel):
         bool  # This is a flag to indicate if the session is the current one
     )
     created_at: datetime.datetime
-    expires_at: datetime.datetime
     last_activity_at: datetime.datetime
 
     @staticmethod
@@ -33,6 +32,5 @@ class SessionDTO(BaseModel):
             ip_address=entity.ip_address,
             is_current=is_current,
             created_at=entity.created_at,
-            expires_at=entity.expires_at,
             last_activity_at=entity.last_activity_at,
         )

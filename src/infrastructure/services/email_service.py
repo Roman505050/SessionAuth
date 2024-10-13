@@ -3,14 +3,12 @@ from aiosmtplib import SMTP
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Literal
-from uuid import UUID
 import json
 
-from domain.code.enums import Purpose
-from application.user.interfaces.services.email import IEmailService
+from application.code.ports.services.email import IEmailSender
 
 
-class RabbitMQEmailService(IEmailService):
+class RabbitMQEmailSender(IEmailSender):
     def __init__(self, rabbitmq_url: str):
         self.rabbitmq_url = rabbitmq_url
 
@@ -28,31 +26,6 @@ class RabbitMQEmailService(IEmailService):
             "content_type": content_type,
         }
         queue_name = "email_queue"
-
-        async with await aio_pika.connect_robust(
-            self.rabbitmq_url
-        ) as connection:
-            async with connection.channel() as channel:
-                await channel.declare_queue(queue_name, durable=True)
-                await channel.default_exchange.publish(
-                    aio_pika.Message(
-                        body=json.dumps(data).encode(), delivery_mode=2
-                    ),
-                    routing_key=queue_name,
-                )
-
-    async def send_verification_code(
-        self,
-        user_uuid: UUID,
-        email: str,
-        purpose: Purpose,
-    ) -> None:
-        data = {
-            "user_uuid": str(user_uuid),
-            "recipient": email,
-            "purpose": purpose.value,
-        }
-        queue_name = "email_verification_code_queue"
 
         async with await aio_pika.connect_robust(
             self.rabbitmq_url

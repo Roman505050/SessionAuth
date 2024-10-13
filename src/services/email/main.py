@@ -22,22 +22,14 @@ async def process_message(
                 smtp_password=smtp_settings.PASSWORD,
             )  # Note: SOLID principles are not followed here
 
-            match queue_name:
-                case "email_queue":
-                    await email_service.send_email(
-                        recipient=body["recipient"],
-                        subject=body["subject"],
-                        body=body["body"],
-                        content_type=body["content_type"],
-                    )
-
-                case "email_verification_code_queue":
-                    raise NotImplementedError(
-                        "Verification code email not implemented"
-                    )
+            await email_service.send_email(
+                recipient=body["recipient"],
+                subject=body["subject"],
+                body=body["body"],
+                content_type=body["content_type"],
+            )
 
             logger.success(f"Message processed successfully: {body}")
-            await asyncio.sleep(1)
     except Exception as e:
         logger.error(f"Error processing message: {e}\n{body}")
         await asyncio.sleep(1)
@@ -61,17 +53,11 @@ async def main():
     async with connection:
         channel = await connection.channel()
 
-        queue1_task = asyncio.create_task(
-            consume_queue("email_queue", channel)
-        )
+        queue_task = asyncio.create_task(consume_queue("email_queue", channel))
         logger.success("Consuming queue email_queue - Started")
-        # queue2_task = asyncio.create_task(
-        #     consume_queue("email_verification_code_queue", channel)
-        # )
-        # logger.success("Consuming queue email_verification_code_queue - Started")
 
         logger.success("Started consuming queues")
-        await asyncio.gather(queue1_task)
+        await asyncio.gather(queue_task)
 
 
 if __name__ == "__main__":
