@@ -10,10 +10,6 @@ class Entity(ABC):
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
-    def __post_init__(self):
-        # For first time creation, updated_at should be the same as created_at
-        self.updated_at = self.created_at
-
     def __eq__(self, other):
         return isinstance(other, Entity) and self.uuid == other.uuid
 
