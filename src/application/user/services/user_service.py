@@ -118,6 +118,9 @@ class UserService:
     async def login(
         self, data: LoginUser, user_agent: UserAgent, ip_address: str
     ) -> tuple[UserDTO, list[SessionDTO], str]:
+        # Validate email
+        validate_email(data.email)
+
         try:
             user = await self._user_repo.get_by_email(data.email)
         except UserNotFoundException as e:
