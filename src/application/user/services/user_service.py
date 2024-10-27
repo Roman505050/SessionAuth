@@ -4,10 +4,14 @@ from application.code.enums.email_code_type import EmailCodeType
 from application.code.interfaces.email_code_service import IEmailCodeService
 from application.session.dto.session import SessionDTO
 from application.session.interfaces.session_service import ISessionService
+from application.user.dto.login_user import LoginUser
 from application.user.dto.register_user import RegisterUser
 from application.user.dto.user import UserDTO
 from application.user.exceptions.user_already_exist import (
     UserAlreadyExistException,
+)
+from application.user.exceptions.user_invalid_credentials import (
+    UserInvalidCredentialsException,
 )
 from application.user.exceptions.user_is_deactivate import (
     UserIsDeactivateException,
@@ -106,6 +110,41 @@ class UserService:
             [SessionDTO.from_entity(session, is_current=True)],
             session.session_id,
         )
+
+    async def login(
+        self, data: LoginUser, user_agent: UserAgent, ip_address: str
+    ) -> tuple[UserDTO, list[SessionDTO], str]:
+        try:
+            user = await self._user_repo.get_by_email(data.email)
+        except UserNotFoundException as e:
+            raise UserInvalidCredentialsException(
+                "Invalid email or password."
+            ) from e
+
+        if not self._cryptography_service.verify_password(
+            data.password, user.password_hash
+        ):
+            raise UserInvalidCredentialsException("Invalid email or password.")
+
+        if not user.is_active:
+            raise UserIsDeactivateException()
+
+        if not user.email_verified:
+            await self._email_code_service.send_code(
+                code_type=EmailCodeType.VERIFICATION,
+                email=user.email,
+                user_uuid=user.uuid,
+            )
+
+        user_dto = UserDTO.from_entity(user)
+
+        sessions, token = await self._session_service.create(
+            user=user_dto,
+            user_agent=user_agent,
+            ip_address=ip_address,
+        )
+
+        return user_dto, sessions, token
 
     async def authenticate_by_session_id(self, session_id: str) -> UserDTO:
         user = await self._get_user_by_session_id(session_id)
