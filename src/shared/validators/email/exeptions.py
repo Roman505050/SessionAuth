@@ -1,5 +1,4 @@
-class EmailNotValidError(ValueError):
-    pass
+from email_validator import EmailNotValidError
 
 
 class EmailLengthNotValidError(EmailNotValidError):

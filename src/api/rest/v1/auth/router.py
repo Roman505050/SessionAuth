@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status, Response, Body, Request
 from fastapi.responses import JSONResponse
+from email_validator import EmailNotValidError
 from loguru import logger
 
 from api.rest.v1.auth.dependencies import (
@@ -18,7 +19,7 @@ from application.user.dto.register_user import RegisterUser
 from application.user.services.user_service import UserService
 from domain.session.value_objects.user_agent import UserAgent
 from shared.exceptions.already_exist import AlreadyExistException
-from shared.validators.email import EmailNotValidError
+from shared.validators.email import EmailLengthNotValidError
 
 from config import session_settings
 
@@ -58,6 +59,14 @@ async def register(
             sessions=sessions,
         )
     except AlreadyExistException as e:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": str(e),
+            },
+        )
+    except EmailLengthNotValidError as e:
         return JSONResponse(
             status_code=400,
             content={
