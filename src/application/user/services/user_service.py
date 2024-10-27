@@ -27,6 +27,7 @@ from application.user.ports.services.cryptography import (
 from application.utils.iunitofwork import IUnitOfWork
 from domain.session.value_objects.user_agent import UserAgent
 from domain.user.entities.user import UserEntity
+from shared.validators.email import validate_email
 
 
 class UserService:
@@ -53,6 +54,9 @@ class UserService:
     async def register(
         self, data: RegisterUser, user_agent: UserAgent, ip_address: str
     ) -> tuple[UserDTO, list[SessionDTO], str]:
+        # Validate email
+        validate_email(data.email)
+
         try:
             if await self._user_repo.get_by_email(data.email):
                 raise UserAlreadyExistException(
