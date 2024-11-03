@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Response, Body, Request
+from fastapi import APIRouter, Depends, status, Response, Request
 from fastapi.responses import JSONResponse
 from email_validator import EmailNotValidError
 from loguru import logger
@@ -15,7 +15,14 @@ from api.rest.v1.auth.schemas import (
 )
 from application.code.exceptions.code_expired import EmailCodeExpiredException
 from application.code.exceptions.code_invalid import EmailCodeInvalidException
+from application.user.dto.login_user import LoginUser
 from application.user.dto.register_user import RegisterUser
+from application.user.exceptions.user_invalid_credentials import (
+    UserInvalidCredentialsException,
+)
+from application.user.exceptions.user_is_deactivate import (
+    UserIsDeactivateException,
+)
 from application.user.services.user_service import UserService
 from domain.session.value_objects.user_agent import UserAgent
 from shared.exceptions.already_exist import AlreadyExistException
@@ -92,6 +99,76 @@ async def register(
         )
     except Exception as e:
         logger.error(f"Register user error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "message": "Something went wrong.",
+            },
+        )
+
+
+@router.post(
+    "/login",
+    status_code=status.HTTP_200_OK,
+)
+async def login(
+    response: Response,
+    body: LoginUser,
+    user_agent: UserAgent = Depends(get_user_agent),
+    ip_address: str = Depends(get_ip_remote),
+    user_service: UserService = Depends(get_user_service),
+):
+    try:
+        user, sessions, session_id = await user_service.login(
+            body, user_agent, ip_address
+        )
+
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            secure=session_settings.SECURE,
+            samesite="strict",
+            path="/",
+            max_age=session_settings.EXPIRE_SECONDS,
+        )
+
+        return RegisterResponse(
+            message=(
+                "Check your email box to verify your email."
+                if not user.email_verified
+                else "Login successfully."
+            ),
+            user=user,
+            sessions=sessions,
+        )
+    except UserInvalidCredentialsException:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Invalid email or password.",
+            },
+        )
+    except EmailNotValidError:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Email is not valid.",
+            },
+        )
+    except UserIsDeactivateException:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "User is deactivate.",
+            },
+        )
+    except Exception as e:
+        logger.error(f"Login user error: {e}")
         return JSONResponse(
             status_code=500,
             content={

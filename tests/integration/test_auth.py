@@ -92,3 +92,17 @@ async def test_register_already_exist(ac: AsyncClient):
     assert (
         data["message"] == "User with email david12@gmail.com already exists"
     )
+
+@pytest.mark.asyncio
+async def test_login(ac: AsyncClient):
+    response = await ac.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "david12@gmail.com",
+            "password": "12345678",
+        },
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["message"] == "Login successfully."
+    assert data["user"]["email"] == "david12@gmail.com"
